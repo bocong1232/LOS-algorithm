@@ -1,0 +1,66 @@
+#include <math.h>
+#include <stdio.h>
+
+// Define constants
+#define RAD2DEG (180.0f / M_PI)
+#define DEG2RAD (M_PI / 180.0f)
+
+// Function prototype for judgeyaw (you need to implement this)
+float judgeyaw(float desired_yaw, float current_yaw, float maxang, float minang, float r_ang, float l_ang);
+
+// Define target positions (replace with your actual values)
+float T1[2] = { x1, y1 };
+float T2[2] = { x2, y2 };
+float T3[2] = { x3, y3 };
+float T4[2] = { x4, y4 };
+
+// Ship parameters
+float pos[2] = { 0.0f, 0.0f }; // Initial position
+float ship_yaw = 0.0f;         // Initial yaw angle
+
+// Movement parameters
+float d_step = 1.0f;    // Step size for movement
+float r = 1.0f;         // Radius threshold
+float maxang = ...;     // Define your maximum angle
+float minang = ...;     // Define your minimum angle
+float r_ang = ...;      // Define your right angle limit
+float l_ang = ...;      // Define your left angle limit
+
+int main() {
+    // Array of target pointers for easy iteration
+    float *targets[4] = { T1, T2, T3, T4 };
+
+    while (1) {
+        HAL_Delay(5000);
+
+        // Iterate over each target
+        for (int t = 0; t < 4; t++) {
+            float target_x = targets[t][0];
+            float target_y = targets[t][1];
+
+            // Move towards the target until within 2*r distance
+            while (sqrtf(powf((target_x - pos[0]), 2) + powf((target_y - pos[1]), 2)) > (2 * r)) {
+                // Calculate desired yaw
+                float dx = target_x - pos[0];
+                float dy = target_y - pos[1];
+                float yaw = atan2f(dy, dx) * RAD2DEG + 270.0f;
+                if (yaw >= 360.0f) {
+                    yaw -= 360.0f;
+                }
+
+                // Adjust ship's yaw
+                ship_yaw = judgeyaw(yaw, ship_yaw, maxang, minang, r_ang, l_ang);
+
+                // Update ship's position
+                float ship_yaw_rad = ship_yaw * DEG2RAD;
+                pos[0] += d_step * cosf(ship_yaw_rad);
+                pos[1] += d_step * sinf(ship_yaw_rad);
+
+                // Print current position
+                printf("%.2f\t%.2f\n", pos[0], pos[1]);
+            }
+        }
+    }
+
+    return 0;
+}
